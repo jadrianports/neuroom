@@ -1,5 +1,5 @@
 import { CheckCircle, ImageIcon, UploadIcon } from 'lucide-react';
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useOutletContext } from 'react-router';
 import {
     PROGRESS_INTERVAL_MS,
@@ -17,22 +17,62 @@ const Upload = ({ onComplete, onDragging }: UploadProps) => {
     const [dragging, setDragging] = useState(false);
     const [progress, setProgress] = useState(0);
     const { isSignedIn } = useOutletContext<AuthContext>();
+    const [error, setError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
+
+    const ACCEPTED_TYPES = ['image/jpeg', 'image/png'];
+    const MAX_SIZE = 50 * 1024 * 1024;
+
+    const validateFile = (f: File): { ok: boolean; reason?: string } => {
+        if (!ACCEPTED_TYPES.includes(f.type)) {
+            return { ok: false, reason: 'Only JPG and PNG files are accepted.' };
+        }
+        if (f.size > MAX_SIZE) {
+            return { ok: false, reason: 'File exceeds the 50 MB size limit.' };
+        }
+        return { ok: true };
+    };
 
     const processFile = (selected: File) => {
+        const result = validateFile(selected);
+        if (!result.ok) {
+            setError(result.reason!);
+            return;
+        }
+        setError(null);
         setFile(selected);
         setProgress(0);
 
         const reader = new FileReader();
+        reader.onerror = () => {
+            setFile(null);
+            setProgress(0);
+            setError('Failed to read file. Please try again.');
+        };
         reader.onload = () => {
             const base64 = reader.result as string;
 
-            const interval = setInterval(() => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+
+            intervalRef.current = setInterval(() => {
                 setProgress((prev) => {
                     const next = Math.min(prev + PROGRESS_STEP, 100);
                     if (next >= 100) {
-                        clearInterval(interval);
-                        setTimeout(() => onComplete?.(base64), REDIRECT_DELAY_MS);
+                        if (intervalRef.current) clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                        timeoutRef.current = setTimeout(() => {
+                            timeoutRef.current = null;
+                            onComplete?.(base64);
+                        }, REDIRECT_DELAY_MS);
                     }
                     return next;
                 });
@@ -106,7 +146,10 @@ const Upload = ({ onComplete, onDragging }: UploadProps) => {
                                 ? 'Drag and drop your floor plan here, or click to select a file'
                                 : 'Please sign in to upload your floor plan'}
                         </p>
-                        <p className='help'>Maximum file size is 50 MB.</p>
+                        {error
+                            ? <p className='help' style={{ color: '#ef4444' }}>{error}</p>
+                            : <p className='help'>Maximum file size is 50 MB.</p>
+                        }
                     </div>
                 </div>
             ) : (
