@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { ArrowRight, ArrowUp, ArrowUpRight, Clock, Layers } from "lucide-react";
 import type { Route } from "./+types/home";
 import Navbar from "components/Navbar";
 import Button from "components/ui/Button";
-
+import Upload from "components/Upload";
+import { useNavigate } from "react-router";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
@@ -11,6 +13,13 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
+  const handleUploadComplete = async (base64image: string) => {
+    const newId = Date.now().toString();
+    navigate(`/visualizer/${newId}`, { state: { image: base64image } });
+  }
+  const [shellGlow, setShellGlow] = useState(false);
+  
   return (
   <div className="home">
     <Navbar />
@@ -39,7 +48,7 @@ export default function Home() {
         </Button>
       </div>
 
-      <div id="upload" className="upload-shell">
+      <div id="upload" className={`upload-shell ${shellGlow ? 'is-dragging-over' : ''}`}>
         <div className="grid-overlay"></div>
 
         <div className="upload-card">
@@ -50,7 +59,7 @@ export default function Home() {
             <h3>Upload your floor plan</h3>
             <p>Supports JPG, PNG, and formats up to 10MB</p>
           </div>
-          <p>Upload images</p>
+          <Upload onDragging={setShellGlow} onComplete={handleUploadComplete} />
         </div>
       </div>
     </section>

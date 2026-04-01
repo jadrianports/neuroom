@@ -446,10 +446,25 @@
             }
 
             .upload-shell {
-                @apply w-full max-w-5xl mx-auto relative rounded-3xl overflow-hidden bg-linear-to-b from-blue-100/50 to-white/50 border border-blue-100 p-6 md:p-12 shadow-sm min-h-100 flex items-center justify-center;
+                @apply w-full max-w-5xl mx-auto relative rounded-3xl overflow-hidden bg-linear-to-b from-blue-100/50 to-white/50 border border-blue-100 p-6 md:p-12 shadow-sm min-h-100 flex items-center justify-center transition-all duration-500;
+
+                &.is-dragging-over {
+                    @apply border-primary/40 shadow-[0_0_40px_rgba(249,115,22,0.15),0_0_80px_rgba(249,115,22,0.08)];
+
+                    .grid-overlay {
+                        @apply opacity-60;
+                        background-image:
+                            linear-gradient(#f97316 1px, transparent 1px),
+                            linear-gradient(90deg, #f97316 1px, transparent 1px);
+                    }
+
+                    .upload-card {
+                        @apply border-primary/30 shadow-[0_0_24px_rgba(249,115,22,0.2)] scale-[1.01];
+                    }
+                }
 
                 .grid-overlay {
-                    @apply absolute inset-0 opacity-40 pointer-events-none;
+                    @apply absolute inset-0 opacity-40 pointer-events-none transition-all duration-500;
 
                     background-image:
                             linear-gradient(#3b82f6 1px, transparent 1px),
@@ -459,7 +474,7 @@
                 }
 
                 .upload-card {
-                    @apply relative w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden border border-zinc-100 p-8 z-10 transition-transform hover:scale-[1.01] duration-500;
+                    @apply relative w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden border border-zinc-100 p-8 z-10 transition-all hover:scale-[1.01] duration-500;
 
                     .upload-head {
                         @apply text-center mb-6;
