@@ -14,7 +14,7 @@ export const getCurrentUser = async () => {
     }
 }
 
-export const createProject = async ({ item }: CreateProjectParams):
+export const createProject = async ({ item, visibility }: CreateProjectParams):
     Promise<DesignItem | null> => {
         const projectId = item.id;
 
@@ -64,10 +64,11 @@ export const createProject = async ({ item }: CreateProjectParams):
             ...rest,
             sourceImage: resolvedSource,
             renderedImage: resolvedRender,
+            isPublic: visibility === 'public',
         }
 
         try{
-            // Call the Puter worker to store project in KV
+            await puter.kv.set(`project:${projectId}`, JSON.stringify(payload));
             return payload;
         }
         catch(e){
